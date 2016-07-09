@@ -3,22 +3,17 @@ using System.Collections;
 
 public class Introstart : MonoBehaviour 
 {
-	public GameObject book;
+	public GameObject g;
+	public float tm;
 
-	public void OnMouseEnter()
+	void Start()
 	{
-		gameObject.GetComponent<Renderer> ().material.color = Color.green;
+		StartCoroutine (startDelay ());
 	}
 
-	public void OnMouseUp()
+	IEnumerator startDelay()
 	{
-		book.GetComponent<Animator> ().enabled = true;
-		gameObject.SetActive (false);
+		yield return new WaitForSeconds (tm);
+		g.SetActive (true);
 	}
-
-	public void OnMouseExit()
-	{
-		gameObject.GetComponent<Renderer> ().material.color = Color.white;
-	}
-
 }

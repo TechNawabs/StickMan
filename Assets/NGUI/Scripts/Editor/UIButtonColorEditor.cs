@@ -1,6 +1,6 @@
 //----------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
+// Copyright © 2011-2016 Tasharen Entertainment
 //----------------------------------------------
 
 using UnityEngine;
@@ -16,10 +16,10 @@ public class UIButtonColorEditor : UIWidgetContainerEditor
 	public override void OnInspectorGUI ()
 	{
 		GUILayout.Space(6f);
-		NGUIEditorTools.SetLabelWidth(80f);
+		NGUIEditorTools.SetLabelWidth(86f);
 
 		serializedObject.Update();
-		NGUIEditorTools.DrawProperty("Target", serializedObject, "tweenTarget");
+		NGUIEditorTools.DrawProperty("Tween Target", serializedObject, "tweenTarget");
 		DrawProperties();
 		serializedObject.ApplyModifiedProperties();
 
@@ -43,9 +43,12 @@ public class UIButtonColorEditor : UIWidgetContainerEditor
 
 	protected void DrawColors ()
 	{
-		if (NGUIEditorTools.DrawHeader("Colors"))
+		if (serializedObject.FindProperty("tweenTarget").objectReferenceValue == null) return;
+
+		if (NGUIEditorTools.DrawHeader("Colors", "Colors", false, true))
 		{
-			NGUIEditorTools.BeginContents();
+			NGUIEditorTools.BeginContents(true);
+			NGUIEditorTools.SetLabelWidth(76f);
 			UIButtonColor btn = target as UIButtonColor;
 
 			if (btn.tweenTarget != null)
@@ -68,6 +71,7 @@ public class UIButtonColorEditor : UIWidgetContainerEditor
 			NGUIEditorTools.DrawProperty("Hover", serializedObject, "hover");
 			NGUIEditorTools.DrawProperty("Pressed", serializedObject, "pressed");
 			NGUIEditorTools.DrawProperty("Disabled", serializedObject, "disabledColor");
+			if (Application.isPlaying) EditorGUILayout.ColorField("Default", (target as UIButtonColor).defaultColor);
 			NGUIEditorTools.EndContents();
 		}
 	}

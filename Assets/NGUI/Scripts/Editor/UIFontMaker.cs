@@ -1,6 +1,6 @@
 //----------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
+// Copyright © 2011-2016 Tasharen Entertainment
 //----------------------------------------------
 
 using UnityEngine;
@@ -15,14 +15,14 @@ using System.IO;
 
 public class UIFontMaker : EditorWindow
 {
-	enum FontType
+	public enum FontType
 	{
 		GeneratedBitmap,	// Bitmap font, created from a dynamic font using FreeType
 		ImportedBitmap,		// Imported bitmap font, created using BMFont or another external tool
 		Dynamic,			// Dynamic font, used as-is
 	}
 
-	enum Create
+	public enum Create
 	{
 		None,
 		Bitmap,		// Bitmap font, created from a dynamic font using FreeType
@@ -30,7 +30,7 @@ public class UIFontMaker : EditorWindow
 		Dynamic,	// Dynamic font, used as-is
 	}
 
-	enum CharacterMap
+	public enum CharacterMap
 	{
 		Numeric,	// 0 through 9
 		Ascii,		// Character IDs 32 through 127
@@ -38,8 +38,8 @@ public class UIFontMaker : EditorWindow
 		Custom,		// Only explicitly specified characters will be included
 	}
 
-	FontType mType = FontType.GeneratedBitmap;
-	int mFaceIndex = 0;
+	[System.NonSerialized] FontType mType = FontType.GeneratedBitmap;
+	[System.NonSerialized] int mFaceIndex = 0;
 
 	/// <summary>
 	/// Type of character map chosen for export.
@@ -51,27 +51,24 @@ public class UIFontMaker : EditorWindow
 		set { NGUISettings.SetInt("NGUI Character Map", (int)value); }
 	}
 
-	void Awake ()
-	{
-		mType = (Application.platform == RuntimePlatform.WindowsEditor) ? FontType.GeneratedBitmap : FontType.ImportedBitmap;
-	}
-
 	/// <summary>
 	/// Update all labels associated with this font.
 	/// </summary>
 
 	void MarkAsChanged ()
 	{
-		if (NGUISettings.ambigiousFont != null)
+		Object obj = (Object)NGUISettings.FMFont ?? (Object)NGUISettings.BMFont;
+
+		if (obj != null)
 		{
 			List<UILabel> labels = NGUIEditorTools.FindAll<UILabel>();
 
 			foreach (UILabel lbl in labels)
 			{
-				if (lbl.ambigiousFont == NGUISettings.ambigiousFont)
+				if (lbl.ambigiousFont == obj)
 				{
 					lbl.ambigiousFont = null;
-					lbl.ambigiousFont = NGUISettings.ambigiousFont;
+					lbl.ambigiousFont = obj;
 				}
 			}
 		}
@@ -83,8 +80,11 @@ public class UIFontMaker : EditorWindow
 
 	void OnSelectAtlas (Object obj)
 	{
-		NGUISettings.atlas = obj as UIAtlas;
-		Repaint();
+		if (NGUISettings.atlas != obj)
+		{
+			NGUISettings.atlas = obj as UIAtlas;
+			Repaint();
+		}
 	}
 
 	/// <summary>
@@ -92,7 +92,12 @@ public class UIFontMaker : EditorWindow
 	/// </summary>
 
 	void OnSelectionChange () { Repaint(); }
-	void OnUnityFont (Object obj) { NGUISettings.ambigiousFont = obj; }
+
+	void OnUnityFont (Object obj)
+	{
+		NGUISettings.FMFont = (Font)obj;
+		Repaint();
+	}
 
 	/// <summary>
 	/// Draw the UI for this tool.
@@ -100,18 +105,18 @@ public class UIFontMaker : EditorWindow
 
 	void OnGUI ()
 	{
-		Object fnt = NGUISettings.ambigiousFont;
+		Object fnt = (Object)NGUISettings.FMFont ?? (Object)NGUISettings.BMFont;
 		UIFont uiFont = (fnt as UIFont);
 
 		NGUIEditorTools.SetLabelWidth(80f);
 		GUILayout.Space(3f);
 
 		NGUIEditorTools.DrawHeader("Input", true);
-		NGUIEditorTools.BeginContents();
+		NGUIEditorTools.BeginContents(false);
 
 		GUILayout.BeginHorizontal();
 		mType = (FontType)EditorGUILayout.EnumPopup("Type", mType, GUILayout.MinWidth(200f));
-		GUILayout.Space(18f);
+		NGUIEditorTools.DrawPadding();
 		GUILayout.EndHorizontal();
 		Create create = Create.None;
 
@@ -125,7 +130,7 @@ public class UIFontMaker : EditorWindow
 			EditorGUI.BeginDisabledGroup(NGUISettings.fontData == null || NGUISettings.fontTexture == null);
 			{
 				NGUIEditorTools.DrawHeader("Output", true);
-				NGUIEditorTools.BeginContents();
+				NGUIEditorTools.BeginContents(false);
 				ComponentSelector.Draw<UIAtlas>(NGUISettings.atlas, OnSelectAtlas, false);
 				NGUIEditorTools.EndContents();
 			}
@@ -163,17 +168,17 @@ public class UIFontMaker : EditorWindow
 			if (NGUIEditorTools.DrawPrefixButton("Source"))
 				ComponentSelector.Show<Font>(OnUnityFont, new string[] { ".ttf", ".otf" });
 
-			Font ttf = EditorGUILayout.ObjectField(NGUISettings.ambigiousFont as Font, typeof(Font), false) as Font;
+			Font ttf = EditorGUILayout.ObjectField(NGUISettings.FMFont, typeof(Font), false) as Font;
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
 			{
-				NGUISettings.fontSize = EditorGUILayout.IntField("Size", NGUISettings.fontSize, GUILayout.Width(120f));
+				NGUISettings.FMSize = EditorGUILayout.IntField("Size", NGUISettings.FMSize, GUILayout.Width(120f));
 
 				if (mType == FontType.Dynamic)
 				{
 					NGUISettings.fontStyle = (FontStyle)EditorGUILayout.EnumPopup(NGUISettings.fontStyle);
-					GUILayout.Space(18f);
+					NGUIEditorTools.DrawPadding();
 				}
 			}
 			GUILayout.EndHorizontal();
@@ -183,33 +188,29 @@ public class UIFontMaker : EditorWindow
 			{
 				if (!FreeType.isPresent)
 				{
-					if (Application.platform != RuntimePlatform.WindowsEditor)
-					{
-						EditorGUILayout.HelpBox("Built-in bitmap font generation is only available on Windows platforms.", MessageType.Error);
-					}
-					else
-					{
-						EditorGUILayout.HelpBox("Assets/Editor/FreeType.dll is missing", MessageType.Error);
+					string filename = (Application.platform == RuntimePlatform.WindowsEditor) ? "FreeType.dll" : "FreeType.dylib";
+					EditorGUILayout.HelpBox(filename + " is missing", MessageType.Error);
 
-						GUILayout.BeginHorizontal();
-						GUILayout.Space(20f);
+					GUILayout.BeginHorizontal();
+					GUILayout.Space(20f);
 
-						if (GUILayout.Button("Find FreeType.dll"))
+					if (GUILayout.Button("Find " + filename))
+					{
+						string path = EditorUtility.OpenFilePanel("Find " + filename, NGUISettings.currentPath,
+							(Application.platform == RuntimePlatform.WindowsEditor) ? "dll" : "dylib");
+
+						if (!string.IsNullOrEmpty(path))
 						{
-							string path = EditorUtility.OpenFilePanel("Find FreeType.dll", "Assets", "dll");
-
-							if (!string.IsNullOrEmpty(path))
+							if (System.IO.Path.GetFileName(path) == filename)
 							{
-								if (Path.GetFileName(path) == "FreeType.dll")
-								{
-									NGUISettings.pathToFreeType = path;
-								}
-								else Debug.LogError("The library must be named 'FreeType'");
+								NGUISettings.currentPath = System.IO.Path.GetDirectoryName(path);
+								NGUISettings.pathToFreeType = path;
 							}
+							else Debug.LogError("The library must be named '" + filename + "'");
 						}
-						GUILayout.Space(20f);
-						GUILayout.EndHorizontal();
 					}
+					GUILayout.Space(20f);
+					GUILayout.EndHorizontal();
 				}
 				else if (ttf != null)
 				{
@@ -232,6 +233,8 @@ public class UIFontMaker : EditorWindow
 							}
 						}
 					}
+
+					NGUISettings.fontKerning = EditorGUILayout.Toggle("Kerning", NGUISettings.fontKerning);
 
 					GUILayout.Label("Characters", EditorStyles.boldLabel);
 
@@ -260,7 +263,7 @@ public class UIFontMaker : EditorWindow
 							}
 							else if (cm == CharacterMap.Numeric)
 							{
-								chars = "01234567890";
+								chars = "0123456789";
 							}
 							else if (cm == CharacterMap.Latin)
 							{
@@ -346,7 +349,7 @@ public class UIFontMaker : EditorWindow
 				EditorGUI.BeginDisabledGroup(ttf == null || isBuiltIn || !FreeType.isPresent);
 				{
 					NGUIEditorTools.DrawHeader("Output", true);
-					NGUIEditorTools.BeginContents();
+					NGUIEditorTools.BeginContents(false);
 					ComponentSelector.Draw<UIAtlas>(NGUISettings.atlas, OnSelectAtlas, false);
 					NGUIEditorTools.EndContents();
 
@@ -377,8 +380,15 @@ public class UIFontMaker : EditorWindow
 		if (create == Create.None) return;
 
 		// Open the "Save As" file dialog
-		string prefabPath = EditorUtility.SaveFilePanelInProject("Save As", "New Font.prefab", "prefab", "Save font as...");
+#if UNITY_3_5
+		string prefabPath = EditorUtility.SaveFilePanel("Save As",
+			NGUISettings.currentPath, "New Font.prefab", "prefab");
+#else
+		string prefabPath = EditorUtility.SaveFilePanelInProject("Save As",
+			"New Font.prefab", "prefab", "Save font as...", NGUISettings.currentPath);
+#endif
 		if (string.IsNullOrEmpty(prefabPath)) return;
+		NGUISettings.currentPath = System.IO.Path.GetDirectoryName(prefabPath);
 
 		// Load the font's prefab
 		GameObject go = AssetDatabase.LoadAssetAtPath(prefabPath, typeof(GameObject)) as GameObject;
@@ -407,9 +417,9 @@ public class UIFontMaker : EditorWindow
 		if (create == Create.Dynamic)
 		{
 			uiFont.atlas = null;
-			uiFont.dynamicFont = NGUISettings.dynamicFont;
+			uiFont.dynamicFont = NGUISettings.FMFont;
 			uiFont.dynamicFontStyle = NGUISettings.fontStyle;
-			uiFont.defaultSize = NGUISettings.fontSize;
+			uiFont.defaultSize = NGUISettings.FMSize;
 		}
 		else if (create == Create.Import)
 		{
@@ -434,7 +444,7 @@ public class UIFontMaker : EditorWindow
 
 					// Save the material
 					AssetDatabase.CreateAsset(mat, matPath);
-					AssetDatabase.Refresh();
+					AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
 
 					// Load the material so it's usable
 					mat = AssetDatabase.LoadAssetAtPath(matPath, typeof(Material)) as Material;
@@ -456,7 +466,7 @@ public class UIFontMaker : EditorWindow
 				uiFont.spriteName = NGUISettings.fontTexture.name;
 				uiFont.atlas = NGUISettings.atlas;
 			}
-			NGUISettings.fontSize = uiFont.defaultSize;
+			NGUISettings.FMSize = uiFont.defaultSize;
 		}
 		else if (create == Create.Bitmap)
 		{
@@ -465,9 +475,10 @@ public class UIFontMaker : EditorWindow
 			Texture2D tex;
 
 			if (FreeType.CreateFont(
-				NGUISettings.dynamicFont,
-				NGUISettings.fontSize, mFaceIndex,
-				NGUISettings.charsToInclude, out bmFont, out tex))
+				NGUISettings.FMFont,
+				NGUISettings.FMSize, mFaceIndex,
+				NGUISettings.fontKerning,
+				NGUISettings.charsToInclude, 1, out bmFont, out tex))
 			{
 				uiFont.bmFont = bmFont;
 				tex.name = fontName;
@@ -504,12 +515,12 @@ public class UIFontMaker : EditorWindow
 
 						// Save the material
 						AssetDatabase.CreateAsset(mat, matPath);
-						AssetDatabase.Refresh();
+						AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
 
 						// Load the material so it's usable
 						mat = AssetDatabase.LoadAssetAtPath(matPath, typeof(Material)) as Material;
 					}
-					else AssetDatabase.Refresh();
+					else AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
 
 					// Re-load the texture
 					tex = AssetDatabase.LoadAssetAtPath(texPath, typeof(Texture2D)) as Texture2D;
@@ -530,14 +541,18 @@ public class UIFontMaker : EditorWindow
 			// Update the prefab
 			PrefabUtility.ReplacePrefab(go, prefab);
 			DestroyImmediate(go);
-			AssetDatabase.Refresh();
+			AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
 
 			// Select the atlas
 			go = AssetDatabase.LoadAssetAtPath(prefabPath, typeof(GameObject)) as GameObject;
 			uiFont = go.GetComponent<UIFont>();
 		}
 
-		if (uiFont != null) NGUISettings.ambigiousFont = uiFont;
+		if (uiFont != null)
+		{
+			NGUISettings.FMFont = null;
+			NGUISettings.BMFont = uiFont;
+		}
 		MarkAsChanged();
 		Selection.activeGameObject = go;
 	}
@@ -546,7 +561,7 @@ public class UIFontMaker : EditorWindow
 	/// Helper function that draws a slightly padded toggle
 	/// </summary>
 
-	static bool DrawOption (bool state, string text, params GUILayoutOption[] options)
+	static public bool DrawOption (bool state, string text, params GUILayoutOption[] options)
 	{
 		GUILayout.BeginHorizontal();
 		GUILayout.Space(10f);
@@ -575,6 +590,6 @@ public class UIFontMaker : EditorWindow
 			font.spriteName = NGUISettings.fontTexture.name;
 			font.atlas = NGUISettings.atlas;
 		}
-		NGUISettings.fontSize = font.defaultSize;
+		NGUISettings.FMSize = font.defaultSize;
 	}
 }

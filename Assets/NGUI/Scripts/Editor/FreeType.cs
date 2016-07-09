@@ -1,12 +1,13 @@
 //----------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
+// Copyright © 2011-2016 Tasharen Entertainment
 //----------------------------------------------
 
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using System.Collections.Generic;
 
 /// <summary>
 /// FreeType library is a C++ library used to print text from TrueType fonts.
@@ -280,8 +281,7 @@ static public class FreeType
 		public int x;
 		public int y;
 	}
-
-	const string libName = "FreeType";
+	
 	static bool mFound = false;
 
 	/// <summary>
@@ -292,17 +292,46 @@ static public class FreeType
 	{
 		get
 		{
-			// It's not possible to load C++ DLLs under anything other than Windows.
-			if (Application.platform != RuntimePlatform.WindowsEditor) return false;
-			
 			// According to Unity's documentation, placing the DLL into the Editor folder should make it possible
 			// to use it from within the editor. However from all my testing, that does not appear to be the case.
 			// The DLL has to be explicitly loaded first, or Unity doesn't seem to pick it up at all.
+			// On Mac OS it doesn't seem to be possible to load it at all, unless it's located in /usr/local/lib.
 			if (!mFound)
 			{
-				string path = NGUISettings.pathToFreeType;
-				mFound = File.Exists(path);
-				if (mFound) LoadLibrary(path);
+				if (Application.platform == RuntimePlatform.WindowsEditor)
+				{
+					string path = NGUISettings.pathToFreeType;
+					mFound = File.Exists(path);
+					if (mFound) LoadLibrary(path);
+				}
+				else
+				{
+					string filename = "FreeType.dylib";
+
+					if (File.Exists("/usr/local/lib/" + filename))
+					{
+						mFound = true;
+					}
+					else
+					{
+						string path = NGUISettings.pathToFreeType;
+
+						if (File.Exists(path))
+						{
+							try
+							{
+								if (!System.IO.Directory.Exists("/usr/local/lib"))
+									System.IO.Directory.CreateDirectory("/usr/local/lib");
+								UnityEditor.FileUtil.CopyFileOrDirectory(path, "/usr/local/lib/" + filename);
+								mFound = true;
+							}
+							catch (Exception ex)
+							{
+								Debug.LogWarning("Unable to copy " + filename + " to /usr/local/lib:\n" + ex.Message);
+							}
+						}
+					}
+				}
 			}
 			return mFound;
 		}
@@ -319,63 +348,63 @@ static public class FreeType
 	/// Initialize the FreeType library. Must be called first before doing anything else.
 	/// </summary>
 
-	[DllImport(libName, CallingConvention = CallingConvention.Cdecl)]
+	[DllImport("FreeType", CallingConvention = CallingConvention.Cdecl)]
 	static extern int FT_Init_FreeType (out IntPtr library);
 
 	/// <summary>
 	/// Return the glyph index of a given character code. This function uses a charmap object to do the mapping.
 	/// </summary>
 
-	[DllImport(libName, CallingConvention = CallingConvention.Cdecl)]
+	[DllImport("FreeType", CallingConvention = CallingConvention.Cdecl)]
 	static extern uint FT_Get_Char_Index (IntPtr face, uint charcode);
 
 	/// <summary>
 	/// This function calls FT_Open_Face to open a font by its pathname.
 	/// </summary>
 
-	[DllImport(libName, CallingConvention = CallingConvention.Cdecl)]
+	[DllImport("FreeType", CallingConvention = CallingConvention.Cdecl)]
 	static extern int FT_New_Face (IntPtr library, string filepathname, int face_index, out IntPtr face);
 
 	/// <summary>
 	/// Discard a given face object, as well as all of its child slots and sizes.
 	/// </summary>
 
-	[DllImport(libName, CallingConvention = CallingConvention.Cdecl)]
+	[DllImport("FreeType", CallingConvention = CallingConvention.Cdecl)]
 	static extern int FT_Done_Face (IntPtr face);
 
 	/// <summary>
 	/// A function used to load a single glyph into the glyph slot of a face object.
 	/// </summary>
 
-	[DllImport(libName, CallingConvention = CallingConvention.Cdecl)]
+	[DllImport("FreeType", CallingConvention = CallingConvention.Cdecl)]
 	static extern int FT_Load_Glyph (IntPtr face, uint glyph_index, int load_flags);
 
 	/// <summary>
 	/// Convert a given glyph image to a bitmap.
 	/// </summary>
 
-	[DllImport(libName, CallingConvention = CallingConvention.Cdecl)]
+	[DllImport("FreeType", CallingConvention = CallingConvention.Cdecl)]
 	static extern int FT_Render_Glyph (ref FT_GlyphSlotRec slot, FT_Render_Mode render_mode);
 
 	/// <summary>
 	/// Retrieve kerning information for the specified pair of characters.
 	/// </summary>
 
-	[DllImport(libName, CallingConvention = CallingConvention.Cdecl)]
+	[DllImport("FreeType", CallingConvention = CallingConvention.Cdecl)]
 	static extern int FT_Get_Kerning (IntPtr face, uint left, uint right, uint kern_mode, out FT_Vector kerning);
 
 	/// <summary>
 	/// This function calls FT_Request_Size to request the nominal size (in pixels).
 	/// </summary>
 
-	[DllImport(libName, CallingConvention = CallingConvention.Cdecl)]
+	[DllImport("FreeType", CallingConvention = CallingConvention.Cdecl)]
 	static extern int FT_Set_Pixel_Sizes (IntPtr face, uint pixel_width, uint pixel_height);
 
 	/// <summary>
 	/// Notify FreeType that you are done using the library. Should be called at the end.
 	/// </summary>
 
-	[DllImport(libName, CallingConvention = CallingConvention.Cdecl)]
+	[DllImport("FreeType", CallingConvention = CallingConvention.Cdecl)]
 	static extern int FT_Done_FreeType (IntPtr library);
 
 	/// <summary>
@@ -435,7 +464,7 @@ static public class FreeType
 	/// Create a bitmap font from the specified dynamic font.
 	/// </summary>
 
-	static public bool CreateFont (Font ttf, int size, int faceIndex, string characters, out BMFont font, out Texture2D tex)
+	static public bool CreateFont (Font ttf, int size, int faceIndex, bool kerning, string characters, int padding, out BMFont font, out Texture2D tex)
 	{
 		font = null;
 		tex = null;
@@ -468,8 +497,8 @@ static public class FreeType
 			font.charSize = size;
 
 			Color32 white = Color.white;
-			BetterList<int> entries = new BetterList<int>();
-			BetterList<Texture2D> textures = new BetterList<Texture2D>();
+			List<int> entries = new List<int>();
+			List<Texture2D> textures = new List<Texture2D>();
 
 			FT_FaceRec faceRec = (FT_FaceRec)Marshal.PtrToStructure(face, typeof(FT_FaceRec));
 			FT_Set_Pixel_Sizes(face, 0, (uint)size);
@@ -498,16 +527,19 @@ static public class FreeType
 			spaceGlyph.height = 0;
 
 			// Save kerning information
-			for (int b = 0; b < characters.Length; ++b)
+			if (kerning)
 			{
-				uint ch2 = characters[b];
-				if (ch2 == 32) continue;
+				for (int b = 0; b < characters.Length; ++b)
+				{
+					uint ch2 = characters[b];
+					if (ch2 == 32) continue;
 
-				FT_Vector vec;
-				if (FT_Get_Kerning(face, ch2, 32, 0, out vec) != 0) continue;
+					FT_Vector vec;
+					if (FT_Get_Kerning(face, ch2, 32, 0, out vec) != 0) continue;
 
-				int offset = (vec.x >> 6);
-				if (offset != 0) spaceGlyph.SetKerning((int)ch2, offset);
+					int offset = (vec.x >> 6);
+					if (offset != 0) spaceGlyph.SetKerning((int)ch2, offset);
+				}
 			}
 
 			// Run through all requested characters
@@ -549,23 +581,26 @@ static public class FreeType
 					bmg.channel = 15;
 
 					// Save kerning information
-					for (int b = 0; b < characters.Length; ++b)
+					if (kerning)
 					{
-						uint ch2 = characters[b];
-						if (ch2 == ch) continue;
+						for (int b = 0; b < characters.Length; ++b)
+						{
+							uint ch2 = characters[b];
+							if (ch2 == ch) continue;
 
-						FT_Vector vec;
-						if (FT_Get_Kerning(face, ch2, ch, 0, out vec) != 0) continue;
+							FT_Vector vec;
+							if (FT_Get_Kerning(face, ch2, ch, 0, out vec) != 0) continue;
 
-						int offset = (vec.x / 64);
-						if (offset != 0) bmg.SetKerning((int)ch2, offset);
+							int offset = (vec.x >> 6);
+							if (offset != 0) bmg.SetKerning((int)ch2, offset);
+						}
 					}
 				}
 			}
 
 			// Create a packed texture with all the characters
 			tex = new Texture2D(32, 32, TextureFormat.ARGB32, false);
-			Rect[] rects = tex.PackTextures(textures.ToArray(), 1);
+			Rect[] rects = tex.PackTextures(textures.ToArray(), padding);
 
 			// Make the RGB channel pure white
 			Color32[] cols = tex.GetPixels32();
@@ -587,7 +622,7 @@ static public class FreeType
 			int max = int.MinValue;
 
 			// Other glyphs are visible and need to be added
-			for (int i = 0; i < entries.size; ++i)
+			for (int i = 0, imax = entries.Count; i < imax; ++i)
 			{
 				// Destroy the texture now that it's a part of an atlas
 				UnityEngine.Object.DestroyImmediate(textures[i]);
@@ -608,11 +643,14 @@ static public class FreeType
 				min = Mathf.Min(min, -glyph.offsetY - glyph.height);
 			}
 
+			int baseline = size + min;
+			baseline += ((max - min - size) >> 1);
+
 			// Offset all glyphs so that they are not using the baseline
-			for (int i = 0; i < entries.size; ++i)
+			for (int i = 0, imax = entries.Count; i < imax; ++i)
 			{
 				BMGlyph glyph = font.GetGlyph(entries[i], true);
-				glyph.offsetY += size + min;
+				glyph.offsetY += baseline;
 			}
 		}
 		

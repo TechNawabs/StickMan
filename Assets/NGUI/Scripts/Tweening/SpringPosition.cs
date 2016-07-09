@@ -1,10 +1,9 @@
 //----------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
+// Copyright © 2011-2016 Tasharen Entertainment
 //----------------------------------------------
 
 using UnityEngine;
-using System.Collections.Generic;
 
 /// <summary>
 /// Spring-like motion -- the farther away the object is from the target, the stronger the pull.
@@ -54,7 +53,7 @@ public class SpringPosition : MonoBehaviour
 	public OnFinished onFinished;
 
 	// Deprecated functionality
-	[SerializeField][HideInInspector] GameObject eventReceiver;
+	[SerializeField][HideInInspector] GameObject eventReceiver = null;
 	[SerializeField][HideInInspector] public string callWhenFinished;
 
 	Transform mTrans;
@@ -81,10 +80,10 @@ public class SpringPosition : MonoBehaviour
 
 		if (worldSpace)
 		{
-			if (mThreshold == 0f) mThreshold = (target - mTrans.position).magnitude * 0.001f;
+			if (mThreshold == 0f) mThreshold = (target - mTrans.position).sqrMagnitude * 0.001f;
 			mTrans.position = NGUIMath.SpringLerp(mTrans.position, target, strength, delta);
 
-			if (mThreshold >= (target - mTrans.position).magnitude)
+			if (mThreshold >= (target - mTrans.position).sqrMagnitude)
 			{
 				mTrans.position = target;
 				NotifyListeners();
@@ -93,10 +92,10 @@ public class SpringPosition : MonoBehaviour
 		}
 		else
 		{
-			if (mThreshold == 0f) mThreshold = (target - mTrans.localPosition).magnitude * 0.001f;
+			if (mThreshold == 0f) mThreshold = (target - mTrans.localPosition).sqrMagnitude * 0.00001f;
 			mTrans.localPosition = NGUIMath.SpringLerp(mTrans.localPosition, target, strength, delta);
 
-			if (mThreshold >= (target - mTrans.localPosition).magnitude)
+			if (mThreshold >= (target - mTrans.localPosition).sqrMagnitude)
 			{
 				mTrans.localPosition = target;
 				NotifyListeners();

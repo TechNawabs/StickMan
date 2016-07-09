@@ -1,6 +1,6 @@
 //----------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
+// Copyright © 2011-2016 Tasharen Entertainment
 //----------------------------------------------
 
 #if !UNITY_3_5 && !UNITY_FLASH
@@ -131,6 +131,9 @@ public class UIPopupListInspector : UIWidgetContainerEditor
 		if (GUI.changed) serializedObject.FindProperty("mSelectedItem").stringValue = sel;
 
 		NGUIEditorTools.DrawProperty("Position", serializedObject, "position");
+		NGUIEditorTools.DrawProperty("Alignment", serializedObject, "alignment");
+		NGUIEditorTools.DrawProperty("Open on", serializedObject, "openOn");
+		NGUIEditorTools.DrawProperty("On Top", serializedObject, "separatePanel");
 		NGUIEditorTools.DrawProperty("Localized", serializedObject, "isLocalized");
 
 		DrawAtlas();
@@ -147,16 +150,26 @@ public class UIPopupListInspector : UIWidgetContainerEditor
 		{
 			NGUIEditorTools.BeginContents();
 
+			SerializedProperty atlasSp = null;
+
 			GUILayout.BeginHorizontal();
 			{
 				if (NGUIEditorTools.DrawPrefixButton("Atlas"))
 					ComponentSelector.Show<UIAtlas>(OnSelectAtlas);
-				NGUIEditorTools.DrawProperty("", serializedObject, "atlas");
+				atlasSp = NGUIEditorTools.DrawProperty("", serializedObject, "atlas");
 			}
 			GUILayout.EndHorizontal();
 
-			NGUIEditorTools.DrawPaddedSpriteField("Background", mList.atlas, mList.backgroundSprite, OnBackground);
-			NGUIEditorTools.DrawPaddedSpriteField("Highlight", mList.atlas, mList.highlightSprite, OnHighlight);
+			if (atlasSp != null && atlasSp.objectReferenceValue != null)
+			{
+				NGUIEditorTools.DrawPaddedSpriteField("Background", mList.atlas, mList.backgroundSprite, OnBackground);
+				NGUIEditorTools.DrawPaddedSpriteField("Highlight", mList.atlas, mList.highlightSprite, OnHighlight);
+			}
+			else
+			{
+				serializedObject.DrawProperty("background2DSprite", "Background");
+				serializedObject.DrawProperty("highlight2DSprite", "Highlight");
+			}
 
 			EditorGUILayout.Space();
 
@@ -228,7 +241,7 @@ public class UIPopupListInspector : UIWidgetContainerEditor
 					EditorGUI.BeginDisabledGroup(ttf.hasMultipleDifferentValues);
 					NGUIEditorTools.DrawProperty("Font Size", serializedObject, "fontSize", GUILayout.Width(142f));
 					NGUIEditorTools.DrawProperty("", serializedObject, "fontStyle", GUILayout.MinWidth(40f));
-					GUILayout.Space(18f);
+					NGUIEditorTools.DrawPadding();
 					EditorGUI.EndDisabledGroup();
 				}
 				GUILayout.EndHorizontal();
@@ -243,7 +256,7 @@ public class UIPopupListInspector : UIWidgetContainerEditor
 			NGUIEditorTools.SetLabelWidth(14f);
 			NGUIEditorTools.DrawProperty("X", serializedObject, "padding.x", GUILayout.MinWidth(30f));
 			NGUIEditorTools.DrawProperty("Y", serializedObject, "padding.y", GUILayout.MinWidth(30f));
-			GUILayout.Space(18f);
+			NGUIEditorTools.DrawPadding();
 			NGUIEditorTools.SetLabelWidth(80f);
 			GUILayout.EndHorizontal();
 
