@@ -8,6 +8,7 @@ public class Title : MonoBehaviour
 
 	void Start () 
 	{
+		
 		StartCoroutine ("TitleGeneration");
 		StartCoroutine ("LaunchBook");
 	}
