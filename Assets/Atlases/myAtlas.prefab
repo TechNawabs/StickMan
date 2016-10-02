@@ -42,8 +42,8 @@ MonoBehaviour:
   material: {fileID: 2100000, guid: 138bc00081dd1f442a9efef935748538, type: 2}
   mSprites:
   - name: bl
-    x: 0
-    y: 1799
+    x: 2468
+    y: 1794
     width: 1024
     height: 765
     borderLeft: 0
@@ -55,8 +55,8 @@ MonoBehaviour:
     paddingTop: 0
     paddingBottom: 0
   - name: bubbleA
-    x: 0
-    y: 2565
+    x: 2049
+    y: 3331
     width: 1191
     height: 765
     borderLeft: 0
@@ -68,8 +68,8 @@ MonoBehaviour:
     paddingTop: 0
     paddingBottom: 0
   - name: bubbleB
-    x: 0
-    y: 3331
+    x: 2049
+    y: 2565
     width: 1191
     height: 765
     borderLeft: 0
@@ -81,8 +81,8 @@ MonoBehaviour:
     paddingTop: 0
     paddingBottom: 0
   - name: bubbleC
-    x: 2384
-    y: 3331
+    x: 0
+    y: 143
     width: 1191
     height: 765
     borderLeft: 0
@@ -94,8 +94,8 @@ MonoBehaviour:
     paddingTop: 0
     paddingBottom: 0
   - name: bubbleD
-    x: 1192
-    y: 3331
+    x: 1276
+    y: 1794
     width: 1191
     height: 765
     borderLeft: 0
@@ -106,8 +106,21 @@ MonoBehaviour:
     paddingRight: 0
     paddingTop: 0
     paddingBottom: 0
+  - name: chalk
+    x: 3241
+    y: 3300
+    width: 256
+    height: 256
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
   - name: eraser
-    x: 3576
+    x: 3667
     y: 3856
     width: 405
     height: 240
@@ -119,9 +132,87 @@ MonoBehaviour:
     paddingRight: 0
     paddingTop: 0
     paddingBottom: 0
-  - name: nat
+  - name: ex
+    x: 3241
+    y: 2607
+    width: 204
+    height: 204
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: fb
+    x: 3498
+    y: 3300
+    width: 256
+    height: 256
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: frnd
+    x: 3929
+    y: 3736
+    width: 125
+    height: 119
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: gog
+    x: 3755
+    y: 3300
+    width: 256
+    height: 256
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: inf
     x: 0
-    y: 1000
+    y: 909
+    width: 1275
+    height: 1650
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: myFont
+    x: 3800
+    y: 3727
+    width: 128
+    height: 128
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: nat
+    x: 1276
+    y: 995
     width: 879
     height: 798
     borderLeft: 0
@@ -133,8 +224,8 @@ MonoBehaviour:
     paddingTop: 0
     paddingBottom: 0
   - name: pencil
-    x: 0
-    y: 405
+    x: 2156
+    y: 1199
     width: 930
     height: 594
     borderLeft: 0
@@ -146,8 +237,8 @@ MonoBehaviour:
     paddingTop: 0
     paddingBottom: 0
   - name: rt
-    x: 3982
-    y: 3932
+    x: 4012
+    y: 3392
     width: 71
     height: 164
     borderLeft: 0
@@ -158,9 +249,22 @@ MonoBehaviour:
     paddingRight: 0
     paddingTop: 0
     paddingBottom: 0
+  - name: run
+    x: 3667
+    y: 3723
+    width: 132
+    height: 132
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
   - name: sp
-    x: 3576
-    y: 3625
+    x: 3241
+    y: 2812
     width: 228
     height: 230
     borderLeft: 0
@@ -171,9 +275,48 @@ MonoBehaviour:
     paddingRight: 0
     paddingTop: 0
     paddingBottom: 0
-  - name: wood
+  - name: st
+    x: 3241
+    y: 3693
+    width: 425
+    height: 403
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: tr
     x: 0
-    y: 269
+    y: 2560
+    width: 2048
+    height: 1536
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: tw
+    x: 3241
+    y: 3043
+    width: 256
+    height: 256
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: wood
+    x: 3241
+    y: 3557
     width: 687
     height: 135
     borderLeft: 0

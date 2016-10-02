@@ -4,7 +4,7 @@ using System.Collections;
 public class Title : MonoBehaviour 
 {
 	public float tym;
-	public GameObject go,bk;
+	public GameObject go,bk,bg;
 
 	void Start () 
 	{
@@ -23,7 +23,7 @@ public class Title : MonoBehaviour
 	{
 		yield return new WaitForSeconds (12f);
 		Destroy (go);
-		Destroy(GameObject.Find("sparkles(Clone)"));
 		bk.SetActive (true);
+		bg.SetActive (true);
 	}
 }
